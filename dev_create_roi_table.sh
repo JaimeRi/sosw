@@ -16,28 +16,27 @@ r.in.gdal --o input=$SUBC output=subcat
 r.describe -1 -n subcat > $OUT/subc_IDs.txt
 
 
-
-#### run per tile
-
 # identify tiles
 tiles=$(ls $ENVTB | awk -F_ '{print $1}' | sort | uniq )
 
+# identify variables
+var=( $(ls $ENVTB | awk -F[_.] '{print $2}' | sort | uniq ) )
 
-time for TL in $tiles
+# extract the data for the variable of interest for the list of subcatchments
+# of interest for all tiles
+for TL in $tiles
 do
-    for k in bio1 spi
+    for k in ${var[@]}
     do
-    # extract the data for the variable of interest for the list of subcatchments
     awk 'NR==FNR {a[$1]; next} FNR==1 || $1 in a' \
      $OUT/subc_IDs.txt $ENVTB/${TL}_${k}.txt \
      >  $OUT/ENV_${TL}_${k}.txt
     done
-
 done
 
 
 ################
-### join tables of different itiles for same variable
+### join tables of different tiles for same variable
 variables=( $(find $OUT -name "ENV_*.txt" | awk -F[_.] '{print $3}' \
     | sort | uniq) )
 
