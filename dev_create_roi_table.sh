@@ -3,14 +3,6 @@
 
 #####  INPUTS
 
-# variables of interest
-#export var=( bio1 c10_2020 spi stright )
-export var=( awk 'NR == 1' $VT )
-
-# tiles of interest
-#export tiles=( h18v02 h18v04 h20v02 h20v04 )
-export tiles=( awk 'NR == 2' $VT )
-
 #  path to env tables
 export ENVTB=/data/marquez/vignette/env_tables
 
@@ -21,7 +13,7 @@ export SUBC=/mnt/shared/sosw/tmp/danube_subcatchments.tif
 export OUTFILE=/data/marquez/vignette/out/projectionTB.csv
 
 # file with the list of subcatchments IDs
-export SUBIDS=/data/marquez/vignette/out/subc_IDs.txt
+export SUBCIDS=/data/marquez/vignette/out/subc_IDs.txt
 
 # folder for temporal files
 export TMP=/data/marquez/vignette/out
@@ -29,6 +21,13 @@ export TMP=/data/marquez/vignette/out
 # path to file with list of variables (1st row) and tiles (2nd row)
 export VT=$TMP/var_tiles.txt
 
+# variables of interest
+#export var=( bio1 c10_2020 spi stright )
+export var=( awk 'NR == 1' $VT )
+
+# tiles of interest
+#export tiles=( h18v02 h18v04 h20v02 h20v04 )
+export tiles=( awk 'NR == 2' $VT )
 
 
 ##### ANALYSIS
@@ -41,9 +40,14 @@ do
     do
     awk 'NR==FNR {a[$1]; next} FNR==1 || $1 in a' \
      $SUBCIDS $ENVTB/${TL}_${k}.txt \
+     | awk 'NR > 1 {for(i=1; i<=NF; i++) $i+=0}1' CONVFMT="%.3f" \
      >  $TMP/ENV_${TL}_${k}.txt
     done
 done
+
+###  Additional step to trim the number of decimal places to 3
+awk -F, 'BEGIN{OFS=",";} NR > 1 {for(i=1; i<=NF; i++) $i+=0}1' CONVFMT="%.3f" \
+    $TMP/pres_abs_tmp.csv > $OUTF
 
 ### join tables of different tiles for same variable
 echo ${var[@]} | xargs -n 1 -P 1 bash -c $'
