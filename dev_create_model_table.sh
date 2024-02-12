@@ -62,7 +62,6 @@ paste -d"," \
 
 ## (Pseudo)absences
 
-
 ####   Procedure by selecting random rows from predict_table $PTB
 shuf -n$ABS $PTB --output=$TMP/abs_tmp1.csv
 
@@ -75,6 +74,8 @@ paste -d"," \
     <(printf '0%.0s\n' $(eval "echo {1.."$(($A))"}")) \
     <(cut -d"," --complement -f 1 $TMP/abs_tmp1.csv) \
     > $TMP/abs_tmp2.csv
+
+####   Join presences and absences
 
 ### Join presences and absences
 cat $TMP/pa_env_tmp.csv $TMP/abs_tmp2.csv > $TMP/pres_abs_tmp.csv  
