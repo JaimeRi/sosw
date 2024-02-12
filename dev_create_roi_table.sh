@@ -3,6 +3,14 @@
 
 #####  INPUTS
 
+# variables of interest
+#export var=( bio1 c10_2020 spi stright )
+export var=( awk 'NR == 1' $VT )
+
+# tiles of interest
+#export tiles=( h18v02 h18v04 h20v02 h20v04 )
+export tiles=( awk 'NR == 2' $VT )
+
 #  path to env tables
 export ENVTB=/data/marquez/vignette/env_tables
 
@@ -24,14 +32,6 @@ export VT=$TMP/var_tiles.txt
 
 
 ##### ANALYSIS
-
-# variables of interest
-#export var=( bio1 c10_2020 spi stright )
-export var=( awk 'NR == 1' $VT )
-
-# tiles of interest
-#export tiles=( h18v02 h18v04 h20v02 h20v04 )
-export tiles=( awk 'NR == 2' $VT )
 
 # extract the data for the variables of interest for the list of subcatchments
 # of interest for all tiles
