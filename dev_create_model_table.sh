@@ -44,20 +44,20 @@ C=$( awk -F, '{print NR}' $SPP | tail -n2 | head -n1 )
 
 # adicionar al archivo anterioir las columnas de subcatchment id
 # add new columns: subcatchment id and presence/absence column (add 1 presences)
-paste -d "," $SPP \
+paste -d "," \
     <(printf "%s\n" SubcatchID $(awk -F, 'FNR > 1 {print $2, $3}' $SPP | gdallocationinfo -valonly -geoloc $SUBC)) \
     <(printf "%s\n" PresAbs $(printf '1%.0s\n' $(eval "echo {1.."$(($C))"}") )) \
     > $TMP/tmp1.csv
 
 # extrcat from projection table the environmental data for the presences 
-awk -F, 'NR==FNR {a[$4]; next} FNR==1 ||  $1 in a' \
+awk -F, 'NR==FNR {a[$1]; next} FNR==1 ||  $1 in a' \
     $TMP/tmp1.csv $PTB  >  $TMP/tmp2.csv
 
 # join tables
 paste -d"," \
-    <(sort -t, -g -k4 $TMP/tmp1.csv) \
-    <(sort -t, -g -k1 $TMP/tmp2.csv) \
-    | cut -d"," --complement -f 6 \
+    <(sort -t, -g -k1 $TMP/tmp1.csv) \
+    <(sort -t, -g -k1 $TMP/tmp2.csv) | head \
+    | cut -d"," --complement -f 3 \
     > $TMP/pa_env_tmp.csv
 
 ## (Pseudo)absences
