@@ -14,6 +14,6 @@ grass -f --text --tmp-location $SUBC  <<'EOF'
 
 r.in.gdal --o input=$SUBC output=subcat
 r.stats -n input=subcat  > $OUT/subc_IDs.txt
+#time r.out.ascii -h input=subcat out=- > $OUT/subc_IDs2.txt
 
 EOF
-
