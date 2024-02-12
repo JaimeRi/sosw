@@ -77,7 +77,11 @@ paste -d"," \
     > $TMP/abs_tmp2.csv
 
 ### Join presences and absences
-cat $TMP/pa_env_tmp.csv $TMP/abs_tmp2.csv > $OUTF 
+cat $TMP/pa_env_tmp.csv $TMP/abs_tmp2.csv > $TMP/pres_abs_tmp.csv  
+
+###  Additional step to trim the number of decimal places to 3
+awk -F, 'BEGIN{OFS=",";} NR > 1 {for(i=1; i<=NF; i++) $i+=0}1' CONVFMT="%.3f" \
+    $TMP/pres_abs_tmp.csv > $OUTF
 
 ### remove temporal files
 rm $TMP/*tmp* 
