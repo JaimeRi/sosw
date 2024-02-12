@@ -34,7 +34,7 @@ export OUTF=/data/marquez/vignette/out/model_table.csv
 
 ### ANALYSIS
 
-## Presences
+## Presence Data
 
 # species name
 export SPPN=$(awk -F, 'NR == 2 {print $1}' $SPP)
@@ -70,7 +70,7 @@ v.out.ascii -c input=abs column=value precision=3 separator=space \
     > $TMP/abs_tmp1.csv
 EOF
 
-# remove duplivates
+# remove duplicates
 awk -F, '!a[$1]++'  $TMP/abs_tmp1.csv > $TMP/abs_tmp2.csv
 
 # remove duplicates in absences if subcatchment id also exist in presence
