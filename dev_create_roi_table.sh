@@ -13,13 +13,15 @@
 ###  6. file with the list of subcatchments IDs
 ###  7. path to output file
 ###  8. path to temporal file
+###  9. number of cores if possible to run in parallel: extract rows from each
+###     tile for each variable (n.tiles * n.variables)
 
 #####  PARAMETERS
 
 # path to file with list of variables (1st row) and tiles (2nd row) and 
 # statistics of interest (e.g. mean, sd)
 export VT=$1
-#export VT=$TMP/var_tiles.txt
+#export VT=$TMP/var_stats_tiles.txt
 
 # variables of interest
 #export var=( bio1 c10_2020 spi stright )
@@ -57,16 +59,16 @@ export SUBCIDS=$4
 
 # output file
 export OUTFILE=$5
-#export OUTFILE=/data/marquez/vignette/out/projectionTB.csv
+#export OUTFILE=/data/marquez/vignette/out/projectionTB2.csv
 
-# folder to store temporal files
+# folder to store temporal files: this folder is defined within the R function
 export TMP=$6
 #export TMP=/data/marquez/vignette/out
 
 # number of cores to run the extraction of information (rows) from tile tables
 # (n.tiles * n.variables)
 export NCORES=$7
-
+#export NCORES=16
 
 
 ##### ANALYSIS
@@ -85,7 +87,7 @@ subsetTB(){
 }
 
 export -f subsetTB
-parallel -j $NCORES subsetTB ::: ${tiles[@]} ::: ${var[@]}
+time parallel -j $NCORES subsetTB ::: ${tiles[@]} ::: ${var[@]}
 
 
 #for TL in ${tiles[@]}
@@ -138,7 +140,7 @@ fi
 
 ##################
 ### join same variable together from different tiles
-echo ${var[@]} | xargs -n 1 -P $NCORES bash -c $'
+time echo ${var[@]} | xargs -n 1 -P $NCORES bash -c $'
 
 X=$1
 
@@ -146,13 +148,26 @@ listf=( $(find $TMP -name "ENV_*_${X}.txt")  )
 
 cat ${listf[@]} > $TMP/aggreg_${X}.txt
 awk \'FNR == 1; FNR > 1 && /^[0-9]/\' $TMP/aggreg_${X}.txt \
-    > $TMP/aggreg_${X}f.txt
-sort -g $TMP/aggreg_${X}f.txt > $TMP/aggreg_${X}.txt
-rm $TMP/aggreg_${X}f.txt
+    > $TMP/aggreg_${X}_tmp1.txt
+sort -g $TMP/aggreg_${X}_tmp1.txt > $TMP/aggreg_${X}.txt
+
+read -a header < $TMP/aggreg_${X}.txt
+
+if [[ ${#header[@]} -gt 2 ]]; then
+
+    nof=( ${header[@]:1} )
+    allh=( ${header[0]} $(echo "${nof[@]/#/${X}_}") )
+    echo ${allh[@]} > $TMP/aggreg_${X}_tmp2.txt
+    awk \'NR>1\' $TMP/aggreg_${X}.txt  >> $TMP/aggreg_${X}_tmp2.txt
+    mv $TMP/aggreg_${X}_tmp2.txt $TMP/aggreg_${X}.txt
+fi
+
+rm $TMP/aggreg_${X}_tmp*.txt
 
 ' _
 
-##################
+
+#################
 ## join all the environmental variables together
 paste -d" " $(find $TMP/aggreg_*.txt) > $TMP/aggreg_all.txt
 
