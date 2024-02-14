@@ -13,8 +13,8 @@
 ###  6. file with the list of subcatchments IDs
 ###  7. path to output file
 ###  8. path to temporal file
-###  9. number of cores if possible to run in parallel: extract rows from each
-###     tile for each variable (n.tiles * n.variables)
+###  9. number of cores (if possible) to run internal process in parallel: 
+###     Highest number needed = (n.tiles * n.variables)
 
 #####  PARAMETERS
 
@@ -74,12 +74,12 @@ export NCORES=$7
 ##### ANALYSIS
 
 ##################
-# Move through each of the tiles and extract the subcatchment of interests for
+# Move through each tiles and extract the subcatchment of interests for
 # all variables 
 
 subsetTB(){
-    TL=$1
-    k=$2
+    TL=$1  # tile
+    k=$2   # variable
     awk 'NR==FNR {a[$1]; next} FNR==1 || $1 in a' \
      $SUBCIDS $ENVTB/${TL}_${k}.txt \
      | awk 'NR > 1 {for(i=1; i<=NF; i++) $i+=0}1' CONVFMT="%.3f" \
@@ -90,20 +90,8 @@ export -f subsetTB
 time parallel -j $NCORES subsetTB ::: ${tiles[@]} ::: ${var[@]}
 
 
-#for TL in ${tiles[@]}
-#do
-#    for k in ${var[@]}
-#    do
-#    awk 'NR==FNR {a[$1]; next} FNR==1 || $1 in a' \
-#     $SUBCIDS $ENVTB/${TL}_${k}.txt \
-#     | awk 'NR > 1 {for(i=1; i<=NF; i++) $i+=0}1' CONVFMT="%.3f" \
-#     >  $TMP/ENV_${TL}_${k}.txt
-#    done
-#done
-
-
 ##################
-##   Subset the tables if user is only interested in few statistics
+#   Subset the tables if user is only interested in few statistics (e.g., mean)
 
 if [[ "${SS[@]}" != 'ALL' ]]    # run only if user do not select ALL
 then
@@ -139,7 +127,7 @@ fi
 
 
 ##################
-### join same variable together from different tiles
+### join all tables for the same variable available in the different tiles
 time echo ${var[@]} | xargs -n 1 -P $NCORES bash -c $'
 
 X=$1
@@ -153,6 +141,7 @@ sort -g $TMP/aggreg_${X}_tmp1.txt > $TMP/aggreg_${X}.txt
 
 read -a header < $TMP/aggreg_${X}.txt
 
+# set the right name for the header (e.g. bio1_mean)
 if [[ ${#header[@]} -gt 2 ]]; then
 
     nof=( ${header[@]:1} )
@@ -171,9 +160,8 @@ rm $TMP/aggreg_${X}_tmp*.txt
 ## join all the environmental variables together
 paste -d" " $(find $TMP/aggreg_*.txt) > $TMP/aggreg_all.txt
 
-## the previous joined creates repetition of the subcID column
+## the previous line creates repetition of the subcID column
 ## Chunk to delete the subCid column 
-
 read -a header < $TMP/aggreg_all.txt  # read first line into array "header"
 declare -a arr=() # array to store the position in which the subCid columns are
 
@@ -193,6 +181,8 @@ cut -d" " --complement -f $(echo "${joined%,}") $TMP/aggreg_all.txt \
 
 ##  remove duplicates and create final output table
 awk -F, '!a[$0]++'  $TMP/aggreg_all_trim.csv > $OUTFILE
+
+
 
 #########################
 # remove temporal files
