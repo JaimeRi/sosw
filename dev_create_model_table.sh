@@ -3,10 +3,10 @@
 
 ### INPUT
 
-## file with table with species name and coordinates
+## file, comma separated, with table with species name and coordinates
 ## be sure no subcatchment duplicates!!!
 export SPP=$1
-export SPP=/data/marquez/vignette/out/spp.csv
+#export SPP=/data/marquez/vignette/out/spp.csv
 
 # crear archivo solo con datos de la especie de interes
 #awk -F, -v SPP="Huso huso" 'BEGIN{OFS=",";} NR == 1 || $2 == SPP {print $2, $3, $4}' \
@@ -14,22 +14,23 @@ export SPP=/data/marquez/vignette/out/spp.csv
 
 ## projection table created with function create_roi_table.sh
 export PTB=$2
-export PTB=/data/marquez/vignette/out/danube_predict.csv
+#export PTB=/data/marquez/vignette/out/projectionTB2.csv
 
 ## path to subcatchment file
 export SUBC=$3
-export SUBC=/mnt/shared/sosw/tmp/danube_subcatchments.tif
+#export SUBC=/mnt/shared/sosw/tmp/danube_subcatchments.tif
 
 ### number of pseudoabsences
 export ABS=$4
-export ABS=10000
+#export ABS=10000
 
 ## temporal folder
 export TMP=$5
-export TMP=/data/marquez/vignette/out
+#export TMP=/data/marquez/vignette/out
 
 ## output file, the model table
-export OUTF=/data/marquez/vignette/out/model_table.csv
+export OUTF=$6
+#export OUTF=/data/marquez/vignette/out/model_table.csv
 
 
 ### ANALYSIS
@@ -49,7 +50,7 @@ paste -d "," \
     <(printf "%s\n" PresAbs $(printf '1%.0s\n' $(eval "echo {1.."$(($C))"}") )) \
     > $TMP/tmp1.csv
 
-# extrcat from projection table the environmental data for the presences 
+# extract from projection table the environmental data for the presences 
 awk -F, 'NR==FNR {a[$1]; next} FNR==1 ||  $1 in a' \
     $TMP/tmp1.csv $PTB  >  $TMP/tmp2.csv
 
@@ -83,6 +84,7 @@ cat $TMP/pa_env_tmp.csv $TMP/abs_tmp2.csv > $OUTF
 ### remove temporal files
 rm $TMP/*tmp* 
 
+exit
 
 
 #### Procedure by spatial selection of random points and including X and Y
