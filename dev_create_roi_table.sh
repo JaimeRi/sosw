@@ -7,12 +7,25 @@
 ###  2. list of statistics of interest :  default "ALL" or list separated by commas 
 ###  3. list of neccesary tiles IDs: list separated by commas
 ###  4. path to environmental tables
-###  5. path, including the file, of the subcatchment for the region of interest
-###  6. file with the list of subcatchments IDs
-###  7. path to output file
-###  8. path to temporal folder
-###  9. number of cores (if possible) to run internal process in parallel: 
+###  5. file with the list of subcatchments IDs
+###  6. path to output file
+###  7. path to temporal folder
+###  8. number of cores (if possible) to run internal process in parallel: 
 ###     Highest number needed = (n.tiles * n.variables)
+
+
+#time  bash dev_create_roi_table.sh \
+#  bio1,c10_2020,spi,stright \
+#  mean,sd \
+#  h18v02,h18v04,h20v02,h20v04 \
+#  /data/marquez/vignette/env_tables  \
+#  /mnt/shared/sosw/tmp/danube_subcatchments.tif  \
+#  /data/marquez/vignette/out/subc_IDs.txt  \
+#  /data/marquez/vignette/out/projectionTB.csv  \
+#  /data/marquez/vignette/out  \
+#  1
+
+
 
 #####  PARAMETERS
 
@@ -36,12 +49,8 @@ export ENVTB=$4
 #        cp /mnt/shared/EnvTablesTiles/LandCover/c10/h18v02_c10_2020.zip \
 #            /data/marquez/vignette/env_tables
 
-# path, including the file, of the subcatchment for the roi
-export SUBC=$5
-#export SUBC=/mnt/shared/sosw/tmp/danube_subcatchments.tif
-
 # file with the list of subcatchments IDs
-export SUBCIDS=$6
+export SUBCIDS=$5
 #export SUBCIDS=/data/marquez/vignette/out/subc_IDs.txt
 
 #library(terra)
@@ -51,16 +60,16 @@ export SUBCIDS=$6
 #write.table(u, file="/data/marquez/vignette/out/subc_IDs.txt", col.names=FALSE, row.names=FALSE)
 
 # output file
-export OUTFILE=$7
+export OUTFILE=$6
 #export OUTFILE=/data/marquez/vignette/out/projectionTB2.csv
 
 # folder to store temporal files: this folder is defined within the R function
-export TMP=$8
+export TMP=$7
 #export TMP=/data/marquez/vignette/out
 
 # number of cores to run the extraction of information (rows) from tile tables
 # (n.tiles * n.variables)
-export NCORES=$9
+export NCORES=$8
 #export NCORES=16
 
 
@@ -80,7 +89,7 @@ subsetTB(){
 }
 
 export -f subsetTB
-time parallel -j $NCORES subsetTB ::: ${tiles[@]} ::: ${var[@]}
+parallel -j $NCORES subsetTB ::: ${tiles[@]} ::: ${var[@]}
 
 
 ##################
@@ -121,7 +130,7 @@ fi
 
 ##################
 ### join all tables for the same variable available in the different tiles
-time echo ${var[@]} | xargs -n 1 -P $NCORES bash -c $'
+echo ${var[@]} | xargs -n 1 -P $NCORES bash -c $'
 
 X=$1
 
@@ -187,6 +196,5 @@ awk -F, '!a[$0]++'  $TMP/aggreg_all_trim.csv > $OUTFILE
 # remove temporal files
 rm $TMP/aggreg*
 rm $TMP/ENV*  
-rm $VT 
 
 exit
