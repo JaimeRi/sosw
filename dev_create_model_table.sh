@@ -1,12 +1,12 @@
 #! /bin/bash
 
- time bash dev_create_model_table.sh  \
-   /data/marquez/vignette/out/spp.csv  \
-   /data/marquez/vignette/out/projectionTB.csv  \
-   /mnt/shared/sosw/tmp/danube_subcatchments.tif  \
-   10000  \
-   /data/marquez/vignette/out  \
-   /data/marquez/vignette/out/model_table.csv
+# time bash dev_create_model_table.sh  \
+#   /data/marquez/vignette/out/spp.csv  \
+#   /data/marquez/vignette/out/projectionTB.csv  \
+#   /mnt/shared/sosw/tmp/danube_subcatchments.tif  \
+#   10000  \
+#   /data/marquez/vignette/out  \
+#   /data/marquez/vignette/out/model_table.csv
 
 
 
