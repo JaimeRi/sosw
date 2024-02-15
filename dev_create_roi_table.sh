@@ -1,54 +1,47 @@
 #! /bin/bash
 
 
-#### R parameters
+#### parameters
 
-###  1. list of variables of interest
-###  2. list of statistics of interest :  default "ALL"
-###  3. list of neccesary tiles IDs
-###  The R function needs to get these previous parameters and create a file
-###  with three rows to store each of the three parameters consecutively
+###  1. list of variables of interest: list separated by commas
+###  2. list of statistics of interest :  default "ALL" or list separated by commas 
+###  3. list of neccesary tiles IDs: list separated by commas
 ###  4. path to environmental tables
 ###  5. path, including the file, of the subcatchment for the region of interest
 ###  6. file with the list of subcatchments IDs
 ###  7. path to output file
-###  8. path to temporal file
+###  8. path to temporal folder
 ###  9. number of cores (if possible) to run internal process in parallel: 
 ###     Highest number needed = (n.tiles * n.variables)
 
 #####  PARAMETERS
 
-# path to file with list of variables (1st row) and tiles (2nd row) and 
-# statistics of interest (e.g. mean, sd)
-export VT=$1
-#export VT=$TMP/var_stats_tiles.txt
-
 # variables of interest
 #export var=( bio1 c10_2020 spi stright )
-export var=( $(awk 'NR == 1' $VT) )
+export var=( $(echo $1 | tr "," "\n") )
 
 # select summary statistics
 # ALL
 # c(mean, sd)
-export SS=( $(awk 'NR == 2' $VT) )
+export SS=( $(echo $2 | tr "," "\n") )
 
 # tiles of interest
 #export tiles=( h18v02 h18v04 h20v02 h20v04 )
-export tiles=( $(awk 'NR == 3' $VT) )
+export tiles=( $(echo $3 | tr "," "\n") )
 
 #  path to environmental tables for each tile
-export ENVTB=$2
+export ENVTB=$4
 #export ENVTB=/data/marquez/vignette/env_tables
 
 #        cp /mnt/shared/EnvTablesTiles/LandCover/c10/h18v02_c10_2020.zip \
 #            /data/marquez/vignette/env_tables
 
 # path, including the file, of the subcatchment for the roi
-export SUBC=$3
+export SUBC=$5
 #export SUBC=/mnt/shared/sosw/tmp/danube_subcatchments.tif
 
 # file with the list of subcatchments IDs
-export SUBCIDS=$4
+export SUBCIDS=$6
 #export SUBCIDS=/data/marquez/vignette/out/subc_IDs.txt
 
 #library(terra)
@@ -58,16 +51,16 @@ export SUBCIDS=$4
 #write.table(u, file="/data/marquez/vignette/out/subc_IDs.txt", col.names=FALSE, row.names=FALSE)
 
 # output file
-export OUTFILE=$5
+export OUTFILE=$7
 #export OUTFILE=/data/marquez/vignette/out/projectionTB2.csv
 
 # folder to store temporal files: this folder is defined within the R function
-export TMP=$6
+export TMP=$8
 #export TMP=/data/marquez/vignette/out
 
 # number of cores to run the extraction of information (rows) from tile tables
 # (n.tiles * n.variables)
-export NCORES=$7
+export NCORES=$9
 #export NCORES=16
 
 
