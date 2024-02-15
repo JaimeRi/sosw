@@ -141,8 +141,14 @@ sort -g $TMP/aggreg_${X}_tmp1.txt > $TMP/aggreg_${X}.txt
 
 read -a header < $TMP/aggreg_${X}.txt
 
+declare -a elem=()
+for e in mean min max sd range
+do
+    [[ ${header[@]} =~ $e ]] && elem+=1 || elem+=0 
+done
+
 # set the right name for the header (e.g. bio1_mean)
-if [[ ${#header[@]} -gt 2 ]]; then
+if [[ "${elem[@]}" -gt 0 ]]; then
 
     nof=( ${header[@]:1} )
     allh=( ${header[0]} $(echo "${nof[@]/#/${X}_}") )
