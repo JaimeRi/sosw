@@ -1,5 +1,14 @@
 #! /bin/bash
 
+ time bash dev_create_model_table.sh  \
+   /data/marquez/vignette/out/spp.csv  \
+   /data/marquez/vignette/out/projectionTB.csv  \
+   /mnt/shared/sosw/tmp/danube_subcatchments.tif  \
+   10000  \
+   /data/marquez/vignette/out  \
+   /data/marquez/vignette/out/model_table.csv
+
+
 
 ### INPUT
 
@@ -46,7 +55,7 @@ C=$( awk -F, '{print NR}' $SPP | tail -n2 | head -n1 )
 # adicionar al archivo anterioir las columnas de subcatchment id
 # add new columns: subcatchment id and presence/absence column (add 1 presences)
 paste -d "," \
-    <(printf "%s\n" SubcatchID $(awk -F, 'FNR > 1 {print $2, $3}' $SPP | gdallocationinfo -valonly -geoloc $SUBC)) \
+    <(printf "%s\n" subcID $(awk -F, 'FNR > 1 {print $2, $3}' $SPP | gdallocationinfo -valonly -geoloc $SUBC)) \
     <(printf "%s\n" PresAbs $(printf '1%.0s\n' $(eval "echo {1.."$(($C))"}") )) \
     > $TMP/tmp1.csv
 
