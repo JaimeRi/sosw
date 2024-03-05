@@ -19,28 +19,53 @@
 #  mean,sd \
 #  h18v02,h18v04,h20v02,h20v04 \
 #  /data/marquez/vignette/env_tables  \
-#  /mnt/shared/sosw/tmp/danube_subcatchments.tif  \
 #  /data/marquez/vignette/out/subc_IDs.txt  \
 #  /data/marquez/vignette/out/projectionTB.csv  \
 #  /data/marquez/vignette/out  \
 #  1
 
+#bio=( $(ls /mnt/shared/EnvTablesTiles/Climate/present) )
+#hyd=( $(ls /mnt/shared/EnvTablesTiles/Hydrography90m) )
+#hyd=( chancurv chandistdwseg chandistupcel chandistupseg chanelvdwcel chanelvdwseg chanelvupcel chanelvupseg changraddwseg changradupcel changradupseg cum_length elev_drop flow flow_accum flowpos garid gevapt gradient length out_dist out_drop outdiffdwbasin outdiffdwscatch outdistdwbasin outdistdwscatch outlet_elev slopcmax slopcmin slopdiff slopgrad soil_ACDWRB soil_AWCtS soil_BDRICM soil_BDRLOG soil_BLDFIE soil_CECSOL soil_CLYPPT soil_CRFVOL soil_HISTPR soil_ORCDRC soil_PHIHOX soil_SLGWRB soil_SLTPPT soil_SNDPPT soil_TEXMHT soil_WWP source_elev spi sti strdiffdwnear strdiffupfarth strdiffupnear strdistdwnear strdistprox strdistupfarth strdistupnear stright )
+
+#cob=( c10_2020 c20_2020 c30_2020 c40_2020 c50_2020 c60_2020 c70_2020 c80_2020 c90_2020 c100_2020 )
+#ENV=( ${bio[@]} ${hyd[@]} ${cob[@]} )
+#printf -v joined '%s,' "${ENV[@]}"
+
+
+time  bash dev_create_roi_table.sh \
+  $(echo "${joined%,}") \
+  mean,sd \
+  h18v02 \
+ # h18v02,h18v04,h20v02,h20v04  \
+  /mnt/shared/danube/env_tiles  \
+  /mnt/shared/danube/subc_IDs.txt  \
+  /mnt/shared/danube/out/danube_predictTB.csv  \
+  /mnt/shared/tmp/danube \
+  30
 
 
 #####  PARAMETERS
 
 # variables of interest
 #export var=( bio1 c10_2020 spi stright )
-export var=( $(echo $1 | tr "," "\n") )
+VAR=( $(echo $1 | tr "," "\n") )
+[[ "${#VAR[@]}" -eq 1 ]] && var=($(echo $1)) || var="${VAR[@]}"
+export var
 
 # select summary statistics
 # ALL
 # c(mean, sd)
-export SS=( $(echo $2 | tr "," "\n") )
+ss=( $(echo $2 | tr "," "\n") )
+[[ "${#ss[@]}" -eq 1 ]] && SS=($(echo $2)) || SS="${SS[@]}"
+export SS
 
 # tiles of interest
 #export tiles=( h18v02 h18v04 h20v02 h20v04 )
-export tiles=( $(echo $3 | tr "," "\n") )
+TT=($(echo "$3" | tr "," "\n"))
+[[ "${#TT[@]}" -eq 1 ]] && tiles=($(echo $3)) || tiles="${TT[@]}"
+export tiles
+
 
 #  path to environmental tables for each tile
 export ENVTB=$4
@@ -194,7 +219,7 @@ awk -F, '!a[$0]++'  $TMP/aggreg_all_trim.csv > $OUTFILE
 
 #########################
 # remove temporal files
-rm $TMP/aggreg*
-rm $TMP/ENV*  
+#rm $TMP/aggreg*
+#rm $TMP/ENV*  
 
 exit
