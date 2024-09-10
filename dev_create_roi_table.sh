@@ -26,23 +26,33 @@
 
 #bio=( $(ls /mnt/shared/EnvTablesTiles/Climate/present) )
 #hyd=( $(ls /mnt/shared/EnvTablesTiles/Hydrography90m) )
-#hyd=( chancurv chandistdwseg chandistupcel chandistupseg chanelvdwcel chanelvdwseg chanelvupcel chanelvupseg changraddwseg changradupcel changradupseg cum_length elev_drop flow flow_accum flowpos garid gevapt gradient length out_dist out_drop outdiffdwbasin outdiffdwscatch outdistdwbasin outdistdwscatch outlet_elev slopcmax slopcmin slopdiff slopgrad soil_ACDWRB soil_AWCtS soil_BDRICM soil_BDRLOG soil_BLDFIE soil_CECSOL soil_CLYPPT soil_CRFVOL soil_HISTPR soil_ORCDRC soil_PHIHOX soil_SLGWRB soil_SLTPPT soil_SNDPPT soil_TEXMHT soil_WWP source_elev spi sti strdiffdwnear strdiffupfarth strdiffupnear strdistdwnear strdistprox strdistupfarth strdistupnear stright )
+#hyd=( chancurv chandistdwseg chandistupcel chandistupseg chanelvdwcel chanelvdwseg chanelvupcel chanelvupseg changraddwseg changradupcel changradupseg elev_drop flow flow_accum flowpos gradient length out_dist out_drop outdiffdwbasin outdiffdwscatch outdistdwbasin outdistdwscatch outlet_elev slopdiff slopgrad soil_ACDWRB soil_AWCtS soil_BDRICM soil_BDRLOG soil_BLDFIE soil_CECSOL soil_CLYPPT soil_CRFVOL soil_HISTPR soil_ORCDRC soil_PHIHOX soil_SLGWRB soil_SLTPPT soil_SNDPPT soil_TEXMHT soil_WWP source_elev strdiffdwnear strdiffupfarth strdiffupnear strdistdwnear strdistprox strdistupfarth strdistupnear stright )
 
 #cob=( c10_2020 c20_2020 c30_2020 c40_2020 c50_2020 c60_2020 c70_2020 c80_2020 c90_2020 c100_2020 )
 #ENV=( ${bio[@]} ${hyd[@]} ${cob[@]} )
 #printf -v joined '%s,' "${ENV[@]}"
 
 
+#time  bash dev_create_roi_table.sh \
+#  $(echo "${joined%,}") \
+#  mean,sd \
+#  h18v02,h18v04,h20v02,h20v04 \
+#  /mnt/shared/danube/env_tiles  \
+#  /mnt/shared/danube/subc_IDs.txt  \
+#  /mnt/shared/danube/out/danube_predictTB.csv  \
+#  /mnt/shared/tmp/danube \
+#  20
+#
+
 time  bash dev_create_roi_table.sh \
-  $(echo "${joined%,}") \
+  bio1,c120_2020,elev_drop \
   mean,sd \
-  h18v02 \
- # h18v02,h18v04,h20v02,h20v04  \
-  /mnt/shared/danube/env_tiles  \
+  h18v02,h18v04 \
+  /mnt/shared/danube/env_tl  \
   /mnt/shared/danube/subc_IDs.txt  \
-  /mnt/shared/danube/out/danube_predictTB.csv  \
+  /mnt/shared/danube/out/test_predictTB.csv  \
   /mnt/shared/tmp/danube \
-  30
+  6
 
 
 #####  PARAMETERS
@@ -50,26 +60,27 @@ time  bash dev_create_roi_table.sh \
 # variables of interest
 #export var=( bio1 c10_2020 spi stright )
 VAR=( $(echo $1 | tr "," "\n") )
-[[ "${#VAR[@]}" -eq 1 ]] && var=($(echo $1)) || var="${VAR[@]}"
+[[ "${#VAR[@]}" -eq 1 ]] && var=($(echo $1)) || var=("${VAR[@]}")
 export var
 
 # select summary statistics
 # ALL
 # c(mean, sd)
 ss=( $(echo $2 | tr "," "\n") )
-[[ "${#ss[@]}" -eq 1 ]] && SS=($(echo $2)) || SS="${SS[@]}"
+[[ "${#ss[@]}" -eq 1 ]] && SS=($(echo $2)) || SS=("${ss[@]}")
 export SS
 
 # tiles of interest
 #export tiles=( h18v02 h18v04 h20v02 h20v04 )
 TT=($(echo "$3" | tr "," "\n"))
-[[ "${#TT[@]}" -eq 1 ]] && tiles=($(echo $3)) || tiles="${TT[@]}"
+[[ "${#TT[@]}" -eq 1 ]] && tiles=($(echo $3)) || tiles=("${TT[@]}")
 export tiles
 
 
 #  path to environmental tables for each tile
 export ENVTB=$4
 #export ENVTB=/data/marquez/vignette/env_tables
+#export ENVTB=/mnt/shared/danube/env_tiles
 
 #        cp /mnt/shared/EnvTablesTiles/LandCover/c10/h18v02_c10_2020.zip \
 #            /data/marquez/vignette/env_tables
@@ -91,6 +102,7 @@ export OUTFILE=$6
 # folder to store temporal files: this folder is defined within the R function
 export TMP=$7
 #export TMP=/data/marquez/vignette/out
+#export TMP=/mnt/shared/tmp/danube
 
 # number of cores to run the extraction of information (rows) from tile tables
 # (n.tiles * n.variables)
@@ -108,7 +120,7 @@ subsetTB(){
     TL=$1  # tile
     k=$2   # variable
     awk 'NR==FNR {a[$1]; next} FNR==1 || $1 in a' \
-     $SUBCIDS $ENVTB/${TL}_${k}.txt \
+     $SUBCIDS $ENVTB/${k}_${TL}.txt \
      | awk 'NR > 1 {for(i=1; i<=NF; i++) $i+=0}1' CONVFMT="%.3f" \
      >  $TMP/ENV_${TL}_${k}.txt
 }
@@ -155,6 +167,7 @@ fi
 
 ##################
 ### join all tables for the same variable available in the different tiles
+
 echo ${var[@]} | xargs -n 1 -P $NCORES bash -c $'
 
 X=$1
@@ -191,11 +204,11 @@ rm $TMP/aggreg_${X}_tmp*.txt
 
 #################
 ## join all the environmental variables together
-paste -d" " $(find $TMP/aggreg_*.txt) > $TMP/aggreg_all.txt
+paste -d" " $(find $TMP/aggreg_*.txt) > $TMP/all_var_full.txt
 
 ## the previous line creates repetition of the subcID column
 ## Chunk to delete the subCid column 
-read -a header < $TMP/aggreg_all.txt  # read first line into array "header"
+read -a header < $TMP/all_var_full.txt  # read first line into array "header"
 declare -a arr=() # array to store the position in which the subCid columns are
 
 for i in ${!header[@]}               # iterate through array indexes
@@ -206,20 +219,40 @@ do
     fi
 done
 
-printf -v joined '%s,' "${arr[@]:1}"  # remove from array the first column
+if [[ "${#arr[@]}" -gt 1 ]]
+then
+    printf -v joined '%s,' "${arr[@]:1}"  # remove from array the first column
 
 ##  remove subcID columns (except column 1) and make the table comma separated
-cut -d" " --complement -f $(echo "${joined%,}") $TMP/aggreg_all.txt \
-    | tr -s ' ' ',' > $TMP/aggreg_all_trim.csv
+    cut -d" " --complement -f $(echo "${joined%,}") $TMP/all_var_full.txt \
+    | tr -s ' ' ',' > $TMP/all_var_trim.csv
 
 ##  remove duplicates and create final output table
-awk -F, '!a[$0]++'  $TMP/aggreg_all_trim.csv > $OUTFILE
+    [[ "${#tiles[@]}" -gt 1  ]] && awk -F, '!a[$0]++'  $TMP/all_var_trim.csv > $OUTFILE || cp $TMP/all_var_trim.csv $OUTFILE
 
+else
 
+    cat $TMP/all_var_full.txt |  tr -s ' ' ',' > $TMP/all_var_trim.csv
+##  remove duplicates and create final output table
+    [[ "${#tiles[@]}" -gt 1  ]] && awk -F, '!a[$0]++'  $TMP/all_var_trim.csv > $OUTFILE || cp $TMP/all_var_trim.csv $OUTFILE
+    
+fi
 
 #########################
 # remove temporal files
-#rm $TMP/aggreg*
-#rm $TMP/ENV*  
+rm $TMP/aggreg*
+rm $TMP/ENV*  
 
 exit
+
+
+
+for f in $(find $TMP/aggreg_*.txt)
+do
+    r=$(awk '{print NF}' $f | sort | uniq)
+    echo "$f" >> checking2.txt
+    echo "$r" >> checking2.txt
+done
+
+aggreg_gevapt.txt aggreg_slopcmax.txt aggreg_slopcmin.txt 
+aggreg_spi.txt aggreg_sti.txt

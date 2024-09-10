@@ -3,6 +3,8 @@ library(data.table)
 library(hydrographr)
 
 spp = read.csv("/mnt/shared/sosw/danube/tmp/Huso_huso/pa_env_Huso_huso.csv")
+spp = read.csv("../model_table.csv")
+spp = read.csv("~/data/sosw/model_table.csv")
 spp$PresAbs = as.factor(spp$PresAbs)
 
 # number of presence records:
@@ -11,7 +13,8 @@ sample_size <- c("0" = pres_num / nrow(spp),
                  "1" = pres_num / nrow(spp))
 
 model <- ranger(spp$PresAbs ~ .,
-                data = spp[,5:14],
+                data = spp[,c(3,4,9,10,15,16,41,42,73,77,78,80,81,91,94,114,143)],
+                #data = spp[,5:14],
                 num.trees = 1000,
                 mtry= 6,
                 replace = T,
@@ -31,7 +34,10 @@ model <- ranger(spp$PresAbs ~ .,
 ### load the prediction table
 
 predtb = read.csv("/mnt/shared/sosw/danube/env/pred/danube_predict.csv")
+predtb = read.csv("~/data/sosw/danube_predictTB.csv")
 predtb = na.omit(predtb)
+
+predtb = read.csv("predTB_1")
 
 ## prediction has to be run in tiles or subtables
 
@@ -56,6 +62,9 @@ for(i in 1:loop_length) {
   cat("Now predicting on chunk", i, "\n")
   pred_list[[i]] <- predict(model, data = rbindlist(stats_table_split[i]) [,-1])
 }
+
+pred = predict(model, data = predtb[,c(2,3,8,9,14,15,40,41,72,76,77,79,80,90,93,113,142)])
+
 
 pred_list_combine <- list()
 for(i in 1:loop_length) {
