@@ -220,3 +220,19 @@ do
 
 done
 
+
+# create richness map
+
+
+sudo grass --text $DIR/grassdata/jucar/PERMANENT
+
+files=( $(find randomForest_output -name "*.tif") )
+for indx in {0..34}
+do
+    r.in.gdal --o input=${files[${indx}]} output=spp_${indx}
+done
+
+r.mapcalc "suma = spp_0 + spp_1 + spp_2 + spp_3 + spp_4 + spp_5 + spp_6 + spp_7 + spp_8 + spp_9 + spp_10 + spp_11 + spp_12 + spp_13 + spp_14 + spp_15 + spp_16 + spp_17 + spp_18 + spp_19 + spp_20 + spp_21 + spp_22 + spp_23 + spp_24 + spp_25 + spp_26 + spp_27 + spp_28 + spp_29 + spp_30 + spp_31 + spp_32 + spp_33 + spp_34"
+
+r.out.gdal --o -f -c -m  createopt="COMPRESS=DEFLATE,ZLEVEL=9" type=Int32 \
+    format=GTiff nodata=-9999 input=suma output=richness.tif

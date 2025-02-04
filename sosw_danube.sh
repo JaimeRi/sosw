@@ -62,7 +62,7 @@ awk -F, '{print NF}' /mnt/shared/danube/out/danube_predictTB.csv | sort | uniq
 
 
 
-### STEP 3: merge previous table witht the water discharge data
+## STEP 3: merge previous table witht the water discharge data
 
 ########   DATA FROM UTRECHT   ################################################
 # main directory
@@ -190,5 +190,22 @@ done
 
 
 
+mkdir $DIR/cog_layers
 
+# runs also on server3
+OUT=$DIR/cog_layers
 
+for basin in jucar danube rhein mekong
+do
+    mkdir $OUT/${basin}
+
+    for FILE in $DIR/bio_modelling/${basin}/randomForest_output/*.tif ; do
+        filename="${FILE##*/}"
+
+        gdaladdo -r average $FILE 2 4 6 8 10 12 14 16 18 20 22 24 26 28 32 64 128
+
+        ### create cloud-optimised tif
+        gdal_translate $FILE   $DIR/cog_layers/${basin}/COG_${filename}  \
+            -co TILED=YES -co COPY_SRC_OVERVIEWS=YES -co COMPRESS=LZW 
+    done
+done
